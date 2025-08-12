@@ -1,0 +1,895 @@
+{% extends 'base.html' %}
+
+{% block title %}Subscribe to {{ tier.name }} - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscription-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+    
+    .subscription-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        overflow: hidden;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .subscription-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+    }
+    
+    .subscription-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .subscription-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .plan-details {
+        padding: 30px 40px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .plan-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+    
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .plan-features li {
+        padding: 8px 0;
+        color: #666;
+        position: relative;
+        padding-left: 25px;
+    }
+    
+    .plan-features li:before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .payment-section {
+        padding: 40px;
+    }
+    
+    .payment-methods {
+        margin-bottom: 30px;
+    }
+    
+    .payment-method-option {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .payment-method-option:hover {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    
+    .payment-method-option.selected {
+        border-color: #667eea;
+        background-color: #f0f4ff;
+    }
+    
+    .payment-method-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .payment-method-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .payment-method-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+    }
+    
+    .khalti-icon {
+        background: linear-gradient(135deg, #5E35B1 0%, #7B1FA2 100%);
+    }
+    
+    .esewa-icon {
+        background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    }
+    
+    .card-icon {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+    }
+    
+    .cash-icon {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .payment-method-info h5 {
+        margin: 0;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .payment-method-info p {
+        margin: 5px 0 0 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .payment-form-section {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .payment-form-section.active {
+        display: block;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .pay-button {
+        width: 100%;
+        padding: 18px;
+        border: none;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .pay-button.khalti {
+        background: linear-gradient(135deg, #5E35B1 0%, #7B1FA2 100%);
+    }
+    
+    .pay-button.esewa {
+        background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    }
+    
+    .pay-button.card {
+        background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+    }
+    
+    .pay-button.cash {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .pay-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    
+    .pay-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .security-notice {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .security-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+    
+    .security-text {
+        color: #666;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .terms-checkbox {
+        margin: 20px 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .terms-checkbox input[type="checkbox"] {
+        margin-top: 3px;
+    }
+    
+    .terms-checkbox label {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.4;
+    }
+    
+    .terms-checkbox a {
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    .terms-checkbox a:hover {
+        text-decoration: underline;
+    }
+    
+    .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+        color: #dc3545;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 15px;
+        display: none;
+    }
+
+    /* Toast placement */
+    .toast-container {
+        position: fixed;
+        top: 90px; /* below fixed navbar */
+        right: 20px;
+        z-index: 1080;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscription-container">
+    <div class="subscription-card">
+        <div class="subscription-header">
+            <h1>Subscribe to {{ tier.name }}</h1>
+            <p>Unlock premium features and enjoy unlimited entertainment</p>
+        </div>
+        
+        <div class="plan-details">
+            <div class="plan-name">{{ tier.name }} Plan</div>
+            <div class="plan-price">रु {{ tier.price }}/month</div>
+            <ul class="plan-features">
+                {% for feature in tier.features.all %}
+                    <li>{{ feature.description }}</li>
+                {% endfor %}
+                <li>Up to {{ tier.max_screens }} screen{{ tier.max_screens|pluralize }}</li>
+                <li>{{ tier.max_quality }} quality</li>
+                <li>Cancel anytime</li>
+            </ul>
+        </div>
+        
+        <div class="payment-section">
+            <h3 style="margin-bottom: 25px; color: #333;">Choose Payment Method</h3>
+            
+            <form id="subscription-form" method="post">
+                {% csrf_token %}
+                
+                <!-- Payment Method Selection -->
+                <div class="payment-methods">
+                    <div class="payment-method-option" data-method="khalti">
+                        <input type="radio" name="payment_method" value="khalti" id="khalti" checked>
+                        <div class="payment-method-content">
+                            <div class="payment-method-icon khalti-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="payment-method-info">
+                                <h5>Khalti Digital Wallet</h5>
+                                <p>Pay with Khalti wallet, mobile banking, or cards</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-method-option" data-method="khalti_dummy">
+                        <input type="radio" name="payment_method" value="khalti_dummy" id="khalti_dummy">
+                        <div class="payment-method-content">
+                            <div class="payment-method-icon khalti-icon">
+                                <i class="fas fa-vial"></i>
+                            </div>
+                            <div class="payment-method-info">
+                                <h5>Khalti (Dummy/Test)</h5>
+                                <p>Simulate a successful Khalti payment (no real charge)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-method-option" data-method="esewa">
+                        <input type="radio" name="payment_method" value="esewa" id="esewa">
+                        <div class="payment-method-content">
+                            <div class="payment-method-icon esewa-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="payment-method-info">
+                                <h5>eSewa</h5>
+                                <p>Pay with eSewa wallet or mobile banking</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                    
+                    <div class="payment-method-option" data-method="cash">
+                        <input type="radio" name="payment_method" value="cash" id="cash">
+                        <div class="payment-method-content">
+                            <div class="payment-method-icon cash-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="payment-method-info">
+                                <h5>Cash at Counter</h5>
+                                <p>Pay at any NepFlix theater location</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Khalti Payment Form -->
+                <div class="payment-form-section" id="khalti-form">
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-control" id="khalti-mobile" name="mobile_number" 
+                               placeholder="98XXXXXXXX" pattern="[0-9]{10}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="khalti-name" name="full_name" 
+                               placeholder="Your full name" required>
+                    </div>
+                    
+                    <button type="submit" class="pay-button khalti" id="khalti-pay-btn">
+                        <i class="fas fa-wallet"></i>
+                        <span>PAY रु {{ tier.price }} WITH KHALTI</span>
+                        <div class="loading-spinner" id="khalti-spinner"></div>
+                    </button>
+                </div>
+                
+                <!-- Dummy Khalti Payment Form -->
+                <div class="payment-form-section" id="khalti_dummy-form">
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-control" id="khalti-dummy-mobile" name="mobile_number" 
+                               placeholder="98XXXXXXXX" pattern="[0-9]{10}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="khalti-dummy-name" name="full_name" 
+                               placeholder="Your full name" required>
+                    </div>
+                    
+                    <button type="submit" class="pay-button khalti" id="khalti-dummy-pay-btn">
+                        <i class="fas fa-vial"></i>
+                        <span>TEST PAYMENT रु {{ tier.price }} (DUMMY)</span>
+                        <div class="loading-spinner" id="khalti-dummy-spinner"></div>
+                    </button>
+                </div>
+                
+                <!-- eSewa Payment Form -->
+                <div class="payment-form-section" id="esewa-form">
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="tel" class="form-control" id="esewa-mobile" name="mobile_number" 
+                               placeholder="98XXXXXXXX" pattern="[0-9]{10}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="esewa-name" name="full_name" 
+                               placeholder="Your full name" required>
+                    </div>
+                    
+                    <button type="submit" class="pay-button esewa" id="esewa-pay-btn">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>PAY रु {{ tier.price }} WITH ESEWA</span>
+                        <div class="loading-spinner" id="esewa-spinner"></div>
+                    </button>
+                </div>
+                
+
+                
+                <!-- Cash Payment Form -->
+                <div class="payment-form-section" id="cash-form">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Cash Payment Instructions:</strong><br>
+                        • Visit any NepFlix theater location<br>
+                        • Provide your booking reference: <strong>{{ tier.id }}-{{ user.id }}</strong><br>
+                        • Pay रु {{ tier.price }} at the counter<br>
+                        • Your membership will be activated immediately
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Preferred Theater Location</label>
+                        <select class="form-control" id="cash-theater" name="theater_location">
+                            <option value="">Select a theater location</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="pay-button cash" id="cash-pay-btn">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>CONFIRM CASH PAYMENT</span>
+                        <div class="loading-spinner" id="cash-spinner"></div>
+                    </button>
+                </div>
+                
+                <!-- Terms and Conditions -->
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="terms-accepted" name="terms_accepted" required>
+                    <label for="terms-accepted">
+                        I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>. 
+                        I understand that my subscription will automatically renew unless cancelled.
+                    </label>
+                </div>
+                
+                <!-- Security Notice -->
+                <div class="security-notice">
+                    <div class="security-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="security-text">
+                        <strong>Secure Payment</strong> - Your payment will be processed securely through our payment gateway. 
+                        You can use your preferred payment method including digital wallets, mobile banking, or other supported payment methods.
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container for dummy Khalti success -->
+<div class="toast-container">
+  <div id="dummy-success-toast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+    <div class="d-flex">
+      <div class="toast-body" id="dummy-success-toast-body">
+        Payment successful! रु {{ tier.price }} received.
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    
+    // Payment method selection handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentOptions = document.querySelectorAll('.payment-method-option');
+        const paymentForms = document.querySelectorAll('.payment-form-section');
+        
+        function showPaymentForm(method) {
+            console.log('showPaymentForm called with method:', method);
+            // Hide all payment forms
+            paymentForms.forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Show selected payment form
+            const selectedForm = document.getElementById(method + '-form');
+            console.log('Selected form element:', selectedForm);
+            if (selectedForm) {
+                selectedForm.classList.add('active');
+                console.log('Form shown:', method + '-form');
+            } else {
+                console.error('Form not found:', method + '-form');
+            }
+            
+            // Update payment option styling
+            paymentOptions.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            const selectedOption = document.querySelector(`[data-method="${method}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+            }
+        }
+        
+        // Add click handlers to payment options
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const method = this.getAttribute('data-method');
+                console.log('Payment option clicked:', method);
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                console.log('Radio button checked for:', method);
+                showPaymentForm(method);
+            });
+        });
+        
+        // Initialize with Khalti selected
+        showPaymentForm('khalti');
+    });
+    
+    // Form submission handling
+    const form = document.getElementById('subscription-form');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        console.log('Form submitted');
+
+        const termsAccepted = document.getElementById('terms-accepted').checked;
+        if (!termsAccepted) {
+            alert('Please accept the terms and conditions to proceed.');
+            return;
+        }
+
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        console.log('Selected payment method:', selectedMethod);
+
+        switch (selectedMethod) {
+            case 'khalti':
+                console.log('Processing Khalti payment');
+                processKhaltiPayment();
+                break;
+            case 'khalti_dummy':
+                console.log('Processing Khalti dummy payment');
+                processKhaltiDummyPayment();
+                break;
+            case 'esewa':
+                console.log('Processing eSewa payment');
+                processEsewaPayment();
+                break;
+
+            case 'cash':
+                console.log('Processing cash payment');
+                processCashPayment();
+                break;
+            default:
+                alert('Please select a payment method.');
+        }
+    });
+
+    function processKhaltiDummyPayment() {
+        console.log('processKhaltiDummyPayment called');
+        const mobile = document.getElementById('khalti-dummy-mobile').value.trim();
+        const name = document.getElementById('khalti-dummy-name').value.trim();
+        
+        console.log('Mobile:', mobile, 'Name:', name);
+
+        if (!mobile || mobile.length !== 10) {
+            alert('Please enter a valid 10-digit mobile number.');
+            return;
+        }
+
+        if (!name) {
+            alert('Please enter your full name.');
+            return;
+        }
+
+        const button = document.getElementById('khalti-dummy-pay-btn');
+        const spinner = document.getElementById('khalti-dummy-spinner');
+        
+        console.log('Button:', button, 'Spinner:', spinner);
+
+        button.disabled = true;
+        spinner.style.display = 'block';
+
+        console.log('Sending fetch request...');
+        fetch('{% url "membership:subscribe" tier.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({
+                mobile_number: mobile,
+                full_name: name,
+                payment_method: 'khalti_dummy'
+            }),
+        }).then(response => {
+            console.log('Response received:', response);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Data received:', data);
+            if (data.success) {
+                // Show success toast with amount
+                const toastEl = document.getElementById('dummy-success-toast');
+                const toastBody = document.getElementById('dummy-success-toast-body');
+                toastBody.textContent = `Payment successful! रु {{ tier.price }} received.`;
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+
+                // Redirect after toast
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '{% url "membership:my_membership" %}';
+                }, 2100);
+            } else {
+                alert(data.error || 'Payment failed. Please try again.');
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }).catch((error) => {
+            console.error('Error in fetch:', error);
+            alert('Network error. Please try again.');
+            button.disabled = false;
+            spinner.style.display = 'none';
+        });
+    }
+    
+    function processKhaltiPayment() {
+        const mobile = document.getElementById('khalti-mobile').value.trim();
+        const name = document.getElementById('khalti-name').value.trim();
+        
+        if (!mobile || mobile.length !== 10) {
+            alert('Please enter a valid 10-digit mobile number.');
+            return;
+        }
+        
+        if (!name) {
+            alert('Please enter your full name.');
+            return;
+        }
+        
+        const button = document.getElementById('khalti-pay-btn');
+        const spinner = document.getElementById('khalti-spinner');
+        
+        // Show loading state
+        button.disabled = true;
+        spinner.style.display = 'block';
+        
+        // Send payment data to server
+        fetch('{% url "membership:subscribe" tier.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({
+                mobile_number: mobile,
+                full_name: name,
+                payment_method: 'khalti'
+            }),
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show warning if present (for development mode)
+                if (data.warning) {
+                    alert(data.warning);
+                }
+                
+                // Show success message
+                if (data.message) {
+                    alert(data.message);
+                }
+                
+                // Redirect to success page or payment URL
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.href = '{% url "membership:my_membership" %}';
+                }
+            } else {
+                // Enhanced error handling with alternative payment suggestions
+                let errorMessage = data.error || 'Payment failed. Please try again.';
+                
+                // Check if it's a Khalti-specific error and suggest alternatives
+                if (errorMessage.includes('Khalti') || errorMessage.includes('401') || errorMessage.includes('token')) {
+                    errorMessage += '\n\nAlternative payment methods:\n• eSewa\n• Cash at Counter\n\nPlease try another payment method.';
+                }
+                
+                alert(errorMessage);
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }).catch(error => {
+            console.error('Payment error:', error);
+            alert('Network error. Please try again.\n\nAlternative payment methods:\n• eSewa\n• Cash at Counter');
+            button.disabled = false;
+            spinner.style.display = 'none';
+        });
+    }
+    
+    function processEsewaPayment() {
+        const mobile = document.getElementById('esewa-mobile').value.trim();
+        const name = document.getElementById('esewa-name').value.trim();
+        
+        if (!mobile || mobile.length !== 10) {
+            alert('Please enter a valid 10-digit mobile number.');
+            return;
+        }
+        
+        if (!name) {
+            alert('Please enter your full name.');
+            return;
+        }
+        
+        const button = document.getElementById('esewa-pay-btn');
+        const spinner = document.getElementById('esewa-spinner');
+        
+        // Show loading state
+        button.disabled = true;
+        spinner.style.display = 'block';
+        
+        // Simulate eSewa payment processing
+        setTimeout(() => {
+            // Send payment data to server
+            fetch('{% url "membership:subscribe" tier.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({
+                    mobile_number: mobile,
+                    full_name: name,
+                    payment_method: 'esewa'
+                }),
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url || '{% url "membership:my_membership" %}';
+                } else {
+                    alert(data.error || 'Payment failed. Please try again.');
+                    button.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            }).catch(error => {
+                alert('Network error. Please try again.');
+                button.disabled = false;
+                spinner.style.display = 'none';
+            });
+        }, 2000);
+    }
+    
+
+    
+    function processCashPayment() {
+        const theater = document.getElementById('cash-theater').value;
+        
+        if (!theater) {
+            alert('Please select a theater location.');
+            return;
+        }
+        
+        const button = document.getElementById('cash-pay-btn');
+        const spinner = document.getElementById('cash-spinner');
+        
+        // Show loading state
+        button.disabled = true;
+        spinner.style.display = 'block';
+        
+        // Simulate cash payment processing
+        setTimeout(() => {
+            // Send payment data to server
+            fetch('{% url "membership:subscribe" tier.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({
+                    theater_location: theater,
+                    payment_method: 'cash'
+                }),
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Cash payment confirmed! Please visit the selected theater to complete your payment. Your membership will be activated once payment is received.');
+                    window.location.href = data.redirect_url || '{% url "membership:my_membership" %}';
+                } else {
+                    alert(data.error || 'Payment confirmation failed. Please try again.');
+                    button.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            }).catch(error => {
+                alert('Network error. Please try again.');
+                button.disabled = false;
+                spinner.style.display = 'none';
+            });
+        }, 1000);
+    }
+    
+    // Populate theater locations for cash payment
+    document.addEventListener('DOMContentLoaded', function() {
+        const theaterSelect = document.getElementById('cash-theater');
+        if (theaterSelect) {
+            // Add some sample theater locations
+            const theaters = [
+                'NepFlix Kathmandu Mall',
+                'NepFlix Lalitpur Center',
+                'NepFlix Bhaktapur Plaza',
+                'NepFlix Pokhara Cinema',
+                'NepFlix Biratnagar Multiplex'
+            ];
+            
+            theaters.forEach(theater => {
+                const option = document.createElement('option');
+                option.value = theater;
+                option.textContent = theater;
+                theaterSelect.appendChild(option);
+            });
+        }
+    });
+</script>
+{% endblock %}

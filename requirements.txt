@@ -1,0 +1,8 @@
+Django==4.2.23
+Pillow==10.1.0
+stripe==7.8.0
+qrcode==7.4.2
+reportlab==4.0.7
+django-allauth==0.57.0
+khalti==0.1.0
+requests==2.31.0 

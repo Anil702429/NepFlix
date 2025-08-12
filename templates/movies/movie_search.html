@@ -1,0 +1,200 @@
+{% extends 'movies/movie_list.html' %}
+
+{% block title %}Search Results - NepFlix{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 mb-3">Search Nepali Movies</h1>
+                <p class="lead mb-4">
+                    {% if query %}
+                        Found {{ movies.count }} Nepali movie{{ movies.count|pluralize }} for "{{ query }}"
+                    {% else %}
+                        Browse all Nepali movies
+                    {% endif %}
+                </p>
+                
+                <!-- Search Box -->
+                <form method="get" action="{% url 'movies:movie_search' %}" class="mb-4">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" name="q" class="form-control form-control-lg" 
+                                       placeholder="Search Nepali movies by title or genre..."
+                                       value="{{ query|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="filter-group">
+                    <label class="filter-label">Genre</label>
+                    <select name="genre" class="form-select" id="genreFilter">
+                        <option value="">All Genres</option>
+                        {% for genre in genres %}
+                        <option value="{{ genre }}" {% if selected_genre == genre %}selected{% endif %}>
+                            {{ genre|title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="form-select sort-dropdown" id="sortFilter">
+                        <option value="release_date">Latest Releases</option>
+                        <option value="rating">Highest Rated</option>
+                        <option value="title">Alphabetical</option>
+                        <option value="duration">Duration</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="filter-group w-100">
+                    <button class="btn btn-filter w-100 mb-2" onclick="applyFilters()">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <button class="btn btn-clear w-100" onclick="clearFilters()">
+                        <i class="fas fa-times me-2"></i>Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="row" id="moviesGrid">
+        {% if movies %}
+            {% for movie in movies %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="movie-card">
+                    <div class="position-relative">
+                                        {% if movie.poster_display_url %}
+                <img src="{{ movie.poster_display_url }}" alt="{{ movie.title }}" class="movie-poster">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x400?text=No+Poster" alt="{{ movie.title }}" class="movie-poster">
+                        {% endif %}
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-primary">{{ movie.get_genre_display }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="movie-info">
+                        <h5 class="movie-title">{{ movie.title }}</h5>
+                        
+                        <div class="movie-meta">
+                            <span class="movie-badge bg-secondary">{{ movie.get_language_display }}</span>
+                            <span class="movie-badge bg-info">{{ movie.duration_formatted }}</span>
+                            <span class="movie-badge bg-warning">{{ movie.rating }}/10</span>
+                        </div>
+                        
+                        {% if movie.avg_rating %}
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= movie.avg_rating %}
+                                    <i class="fas fa-star"></i>
+                                {% elif forloop.counter <= movie.avg_rating|add:0.5 %}
+                                    <i class="fas fa-star-half-alt"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-1">({{ movie.review_count }})</span>
+                        </div>
+                        {% endif %}
+                        
+                        <p class="movie-description">{{ movie.description|truncatewords:20 }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ movie.release_date|date:"M d, Y" }}</small>
+                            <a href="{% url 'movies:movie_detail' movie.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h3>No Movies Found</h3>
+                    <p class="text-muted">
+                        {% if query %}
+                            No movies found matching "{{ query }}". Try different keywords or browse all movies.
+                        {% else %}
+                            No movies match your current filters. Try adjusting your search criteria.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'movies:movie_list' %}" class="btn btn-primary">
+                        <i class="fas fa-film me-2"></i>Browse All Movies
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    function applyFilters() {
+        const genre = document.getElementById('genreFilter').value;
+        const language = document.getElementById('languageFilter').value;
+        const sort = document.getElementById('sortFilter').value;
+        
+        let url = window.location.pathname + '?';
+        const params = new URLSearchParams();
+        
+        // Preserve search query
+        const searchQuery = '{{ query }}';
+        if (searchQuery) params.append('q', searchQuery);
+        
+        if (genre) params.append('genre', genre);
+        if (language) params.append('language', language);
+        if (sort) params.append('sort', sort);
+        
+        if (params.toString()) {
+            url += params.toString();
+        }
+        
+        window.location.href = url;
+    }
+    
+    function clearFilters() {
+        const searchQuery = '{{ query }}';
+        if (searchQuery) {
+            window.location.href = window.location.pathname + '?q=' + searchQuery;
+        } else {
+            window.location.href = window.location.pathname;
+        }
+    }
+    
+    // Auto-apply filters on change (optional)
+    document.getElementById('genreFilter').addEventListener('change', applyFilters);
+    document.getElementById('languageFilter').addEventListener('change', applyFilters);
+    document.getElementById('sortFilter').addEventListener('change', applyFilters);
+</script>
+{% endblock %} 

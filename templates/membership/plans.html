@@ -1,0 +1,384 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Choose Your Plan - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .membership-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .membership-hero h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .membership-hero p {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto 40px;
+    }
+    
+    .plans-container {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+    
+    .plan-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .plan-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .plan-card.featured {
+        border: 3px solid #667eea;
+        transform: scale(1.05);
+    }
+    
+    .plan-card.featured::before {
+        content: "MOST POPULAR";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #667eea;
+        color: white;
+        padding: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .plan-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+    
+    .plan-price small {
+        font-size: 1rem;
+        color: #666;
+    }
+    
+    .plan-description {
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 30px;
+    }
+    
+    .plan-features li {
+        padding: 8px 0;
+        color: #555;
+        position: relative;
+        padding-left: 25px;
+    }
+    
+    .plan-features li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .btn-subscribe {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-subscribe:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-current {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        width: 100%;
+        cursor: not-allowed;
+    }
+    
+    .comparison-table {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin-top: 80px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .comparison-table h3 {
+        text-align: center;
+        margin-bottom: 40px;
+        color: #333;
+        font-size: 2rem;
+    }
+    
+    .feature-row {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .feature-name {
+        flex: 1;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .feature-values {
+        display: flex;
+        flex: 1;
+    }
+    
+    .feature-value {
+        flex: 1;
+        text-align: center;
+        color: #666;
+    }
+    
+    .feature-value.available {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .feature-value.unavailable {
+        color: #dc3545;
+    }
+    
+    @media (max-width: 768px) {
+        .membership-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .plan-card.featured {
+            transform: none;
+            margin-top: 20px;
+        }
+        
+        .comparison-table {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="membership-hero">
+    <div class="container">
+        <h1>Choose Your Plan</h1>
+        <p>Unlock unlimited access to the best movies and exclusive content. Cancel anytime.</p>
+        {% if user_membership %}
+            <div class="alert alert-info" role="alert">
+                <strong>Current Plan:</strong> {{ user_membership.tier.get_name_display }} - {{ user_membership.tier.display_price }}
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Plans Section -->
+<section class="plans-container">
+    <div class="container">
+        <div class="row">
+            {% for tier in tiers %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card {% if tier.name == 'standard' %}featured{% endif %}">
+                    <h3 class="plan-name">{{ tier.get_name_display }}</h3>
+                    <div class="plan-price">
+                        रु {{ tier.price }}<small>/month</small>
+                    </div>
+                    <p class="plan-description">{{ tier.description }}</p>
+                    
+                    <ul class="plan-features">
+                        {% for feature in tier.features %}
+                            <li>{{ feature }}</li>
+                        {% endfor %}
+                        <li>Up to {{ tier.max_screens }} screen{{ tier.max_screens|pluralize }}</li>
+                        <li>{{ tier.max_quality }} quality</li>
+                        <li>Cancel anytime</li>
+                    </ul>
+                    
+                    {% if user_membership and user_membership.tier == tier %}
+                        <button class="btn-current" disabled>Current Plan</button>
+                    {% else %}
+                        <a href="{% url 'membership:subscribe' tier.id %}" class="btn btn-subscribe">
+                            {% if user_membership %}
+                                Switch to {{ tier.get_name_display }}
+                            {% else %}
+                                Start {{ tier.get_name_display }}
+                            {% endif %}
+                        </a>
+                        
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Comparison Table -->
+        <div class="comparison-table">
+            <h3>Plan Comparison</h3>
+            <div class="feature-row">
+                <div class="feature-name">Monthly Price</div>
+                <div class="feature-values">
+                    {% for tier in tiers %}
+                        <div class="feature-value">रु {{ tier.price }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-name">Video Quality</div>
+                <div class="feature-values">
+                    {% for tier in tiers %}
+                        <div class="feature-value">{{ tier.max_quality }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-name">Screens You Can Watch On</div>
+                <div class="feature-values">
+                    {% for tier in tiers %}
+                        <div class="feature-value">{{ tier.max_screens }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-name">Unlimited Movies & TV Shows</div>
+                <div class="feature-values">
+                    {% for tier in tiers %}
+                        <div class="feature-value available">✓</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-name">Watch on Your TV, Computer, Mobile</div>
+                <div class="feature-values">
+                    {% for tier in tiers %}
+                        <div class="feature-value available">✓</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-name">Cancel Anytime</div>
+                <div class="feature-values">
+                    {% for tier in tiers %}
+                        <div class="feature-value available">✓</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Frequently Asked Questions</h2>
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                How does the free trial work?
+                            </button>
+                        </h2>
+                        <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Try NepFlix free for 30 days. After your free trial, you'll be automatically charged the monthly fee unless you cancel.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                Can I cancel anytime?
+                            </button>
+                        </h2>
+                        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! You can cancel your membership at any time. You'll continue to have access until the end of your billing period.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                What can I watch on NepFlix?
+                            </button>
+                        </h2>
+                        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                NepFlix has an extensive library of movies, TV shows, documentaries, and exclusive content. New titles are added regularly.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+{% endblock %} 

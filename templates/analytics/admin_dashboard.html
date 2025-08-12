@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stats-card h3 {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .stats-card p {
+        color: rgba(255,255,255,0.9);
+        margin: 0;
+    }
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .recent-activity {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .activity-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    .metric-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #007bff;
+    }
+    .metric-card h4 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .metric-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    .trend-up {
+        color: #28a745;
+    }
+    .trend-down {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-line me-2"></i>Admin Dashboard
+            </h1>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ total_revenue|floatformat:0 }}</h3>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ total_bookings }}</h3>
+                <p>Total Bookings</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ total_users }}</h3>
+                <p>Total Users</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h3>{{ total_movies }}</h3>
+                <p>Total Movies</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue and Activity Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h4>Monthly Revenue</h4>
+                                        <div class="metric-value">रु {{ monthly_revenue|floatformat:0 }}</div>
+                <div class="metric-label">Last 30 days</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h4>Weekly Revenue</h4>
+                                        <div class="metric-value">रु {{ weekly_revenue|floatformat:0 }}</div>
+                <div class="metric-label">Last 7 days</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h4>Recent Bookings</h4>
+                <div class="metric-value">{{ recent_bookings }}</div>
+                <div class="metric-label">Last 7 days</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <h4>Active Users</h4>
+                <div class="metric-value">{{ active_users }}</div>
+                <div class="metric-label">Last 30 days</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="chart-container">
+                <h4><i class="fas fa-chart-area me-2"></i>Daily Revenue Trend</h4>
+                <canvas id="revenueChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="chart-container">
+                <h4><i class="fas fa-chart-pie me-2"></i>Payment Methods</h4>
+                <canvas id="paymentChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Movies and Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="recent-activity">
+                <h4><i class="fas fa-film me-2"></i>Top Movies by Bookings</h4>
+                {% for movie in top_movies %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between">
+                        <span><strong>{{ movie.title }}</strong></span>
+                        <span class="badge bg-primary">{{ movie.booking_count }} bookings</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No booking data available</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="recent-activity">
+                <h4><i class="fas fa-star me-2"></i>Top Rated Movies</h4>
+                {% for movie in top_rated_movies %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between">
+                        <span><strong>{{ movie.title }}</strong></span>
+                        <span class="badge bg-warning">{{ movie.avg_rating|floatformat:1 }} ★</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No rating data available</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="recent-activity">
+                <h4><i class="fas fa-calendar-check me-2"></i>Recent Bookings</h4>
+                {% for booking in recent_bookings_list %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ booking.user.username }}</strong><br>
+                            <small class="text-muted">{{ booking.movie_title }} - {{ booking.theater_name }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success">रु {{ booking.total_amount }}</span><br>
+                            <small class="text-muted">{{ booking.booking_date|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No recent bookings</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="recent-activity">
+                <h4><i class="fas fa-comments me-2"></i>Recent Reviews</h4>
+                {% for review in recent_reviews %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ review.user.username }}</strong><br>
+                            <small class="text-muted">{{ review.movie.title }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-warning">{{ review.rating }} ★</span><br>
+                            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No recent reviews</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Genre Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="chart-container">
+                <h4><i class="fas fa-chart-bar me-2"></i>Genre Popularity</h4>
+                <div class="row">
+                    {% for genre in genre_stats %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">{{ genre.genre|title }}</h5>
+                                <p class="card-text">
+                                    <strong>{{ genre.count }}</strong> movies<br>
+                                    <small class="text-muted">
+                                        Avg Rating: {{ genre.avg_rating|default:"N/A"|floatformat:1 }}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for item in daily_revenue %}'{{ item.date }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                                        label: 'Daily Revenue (रु)',
+                data: [{% for item in daily_revenue %}{{ item.revenue }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+    const paymentChart = new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for method in payment_methods %}'{{ method.payment_method|title }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for method in payment_methods %}{{ method.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 

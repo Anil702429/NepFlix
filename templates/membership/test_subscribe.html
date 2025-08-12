@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Test Subscribe to {{ tier.get_name_display }} - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .test-subscribe-hero {
+        background: var(--netflix-black);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+    
+    .test-subscribe-container {
+        padding: 60px 0;
+        background: #f8f9fa;
+    }
+    
+    .plan-summary {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .plan-summary h3 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .plan-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .plan-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--netflix-red);
+    }
+    
+    .test-form {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .test-form h4 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .btn-test-subscribe {
+        background: var(--netflix-red);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-test-subscribe:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(229, 9, 20, 0.3);
+        color: white;
+    }
+    
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+    
+    .features-list li {
+        padding: 8px 0;
+        color: #555;
+        position: relative;
+        padding-left: 25px;
+    }
+    
+    .features-list li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .test-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .test-notice i {
+        color: #856404;
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="test-subscribe-hero">
+    <div class="container">
+        <h1>Test Subscription</h1>
+        <p>This is a test subscription page for demonstration purposes</p>
+    </div>
+</section>
+
+<!-- Test Subscription Form -->
+<section class="test-subscribe-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Plan Summary -->
+                <div class="plan-summary">
+                    <h3>Plan Summary</h3>
+                    <div class="plan-details">
+                        <div class="plan-name">{{ tier.get_name_display }} Plan</div>
+                        <div class="plan-price">रु {{ tier.price }}/month</div>
+                    </div>
+                    <p class="text-muted">{{ tier.description }}</p>
+                    
+                    <ul class="features-list">
+                        {% for feature in tier.features %}
+                            <li>{{ feature }}</li>
+                        {% endfor %}
+                        <li>Up to {{ tier.max_screens }} screen{{ tier.max_screens|pluralize }}</li>
+                        <li>{{ tier.max_quality }} quality</li>
+                        <li>Cancel anytime</li>
+                    </ul>
+                </div>
+                
+                <!-- Test Form -->
+                <div class="test-form">
+                    <h4>Test Subscription</h4>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <strong>Test Mode:</strong> This will create a test subscription without real payment processing.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-test-subscribe">
+                            Subscribe to {{ tier.get_name_display }} Plan
+                        </button>
+                    </form>
+                    
+                    <div class="test-notice">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Test Mode</strong> - This subscription will be created for demonstration purposes only. No real payment will be processed.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

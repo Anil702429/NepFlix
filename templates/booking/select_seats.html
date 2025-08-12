@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Seats - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .screen {
+        background: linear-gradient(to bottom, #333, #666);
+        color: white;
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 30px;
+        border-radius: 5px;
+    }
+    .seat-map {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    .seat-row {
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .row-label {
+        display: inline-block;
+        width: 30px;
+        text-align: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    .selected-seats {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Showtime Info -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">{{ showtime.movie.title }}</h4>
+                    <p class="card-text">
+                        <strong>Theater:</strong> {{ showtime.theater.name }}<br>
+                        <strong>Date:</strong> {{ showtime.date|date:"F d, Y" }}<br>
+                        <strong>Time:</strong> {{ showtime.time|time:"g:i A" }}<br>
+                        <strong>Price per seat:</strong> रु {{ showtime.price }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Screen -->
+            <div class="screen">
+                <i class="fas fa-tv me-2"></i>SCREEN
+            </div>
+            
+            <!-- Seat Map -->
+            <div class="seat-map">
+                {% for row, seats in seat_rows.items %}
+                <div class="seat-row">
+                    <span class="row-label">{{ row }}</span>
+                    {% for seat in seats %}
+                    <div class="seat {% if seat.is_booked %}booked{% else %}available{% endif %}" 
+                         data-seat-id="{{ seat.id }}" 
+                         data-seat-label="{{ seat.seat_label }}"
+                         {% if not seat.is_booked %}onclick="toggleSeat(this)"{% endif %}>
+                        {{ seat.seat_number }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Legend -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="seat available me-2"></div>
+                        <span>Available</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="seat selected me-2"></div>
+                        <span>Selected</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="seat booked me-2"></div>
+                        <span>Booked</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booking Summary -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-ticket-alt me-2"></i>Booking Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="selected-seats">
+                        <h6>Selected Seats:</h6>
+                        <div id="selected-seats-list">
+                            <p class="text-muted">No seats selected</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Price per seat:</span>
+                            <span>रु {{ showtime.price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Number of seats:</span>
+                            <span id="seat-count">0</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span id="total-amount">रु 0.00</span>
+                        </div>
+                    </div>
+                    
+                    <button id="proceed-btn" class="btn btn-primary w-100" disabled onclick="proceedToBooking()">
+                        <i class="fas fa-credit-card me-1"></i>Proceed to Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Processing your booking...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedSeats = [];
+const pricePerSeat = {{ showtime.price }};
+
+function toggleSeat(seatElement) {
+    const seatLabel = seatElement.dataset.seatLabel;
+    const seatId = seatElement.dataset.seatId;
+    
+    if (seatElement.classList.contains('selected')) {
+        // Deselect seat
+        seatElement.classList.remove('selected');
+        selectedSeats = selectedSeats.filter(seat => seat.label !== seatLabel);
+    } else {
+        // Select seat
+        seatElement.classList.add('selected');
+        selectedSeats.push({
+            id: seatId,
+            label: seatLabel
+        });
+    }
+    
+    updateBookingSummary();
+}
+
+function updateBookingSummary() {
+    const seatCount = selectedSeats.length;
+    const totalAmount = seatCount * pricePerSeat;
+    
+    document.getElementById('seat-count').textContent = seatCount;
+                document.getElementById('total-amount').textContent = `रु ${totalAmount.toFixed(2)}`;
+    
+    const proceedBtn = document.getElementById('proceed-btn');
+    proceedBtn.disabled = seatCount === 0;
+    
+    // Update selected seats list
+    const selectedSeatsList = document.getElementById('selected-seats-list');
+    if (selectedSeats.length === 0) {
+        selectedSeatsList.innerHTML = '<p class="text-muted">No seats selected</p>';
+    } else {
+        selectedSeatsList.innerHTML = selectedSeats.map(seat => 
+            `<span class="badge bg-primary me-1">${seat.label}</span>`
+        ).join('');
+    }
+}
+
+function proceedToBooking() {
+    if (selectedSeats.length === 0) {
+        alert('Please select at least one seat.');
+        return;
+    }
+    
+    // Show loading modal
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    // Send booking request
+    fetch(`{% url 'booking:create_booking' showtime.id %}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            selected_seats: selectedSeats.map(seat => seat.label)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingModal.hide();
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else {
+            // Redirect to checkout
+            window.location.href = `/booking/checkout/${data.booking_id}/`;
+        }
+    })
+    .catch(error => {
+        loadingModal.hide();
+        alert('An error occurred. Please try again.');
+        console.error('Error:', error);
+    });
+}
+
+// Load initial seat status
+document.addEventListener('DOMContentLoaded', function() {
+    fetch(`{% url 'booking:get_seat_status' showtime.id %}`)
+    .then(response => response.json())
+    .then(data => {
+        // Update seat status based on server data
+        Object.keys(data).forEach(seatLabel => {
+            const seatElement = document.querySelector(`[data-seat-label="${seatLabel}"]`);
+            if (seatElement && data[seatLabel].is_booked) {
+                seatElement.classList.remove('available');
+                seatElement.classList.add('booked');
+                seatElement.onclick = null;
+            }
+        });
+    });
+});
+</script>
+
+<!-- CSRF Token -->
+{% csrf_token %}
+{% endblock %} 

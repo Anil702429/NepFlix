@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My Bookings - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .booking-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .booking-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .booking-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .status-confirmed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-refunded {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .movie-poster {
+        width: 80px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    
+    .booking-details {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .booking-info {
+        flex: 1;
+    }
+    
+    .booking-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-cancel {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+        font-size: 0.9rem;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
+    }
+    
+    .btn-cancel:disabled {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        cursor: not-allowed;
+    }
+    
+    .refund-info {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-color);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--border-color);
+        margin-bottom: 20px;
+    }
+    
+    /* Movie Cards Styles */
+    .movie-card {
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+    
+    .movie-card:hover {
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+    }
+    
+    .movie-poster {
+        width: 80px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+    
+    .movie-poster-placeholder {
+        width: 80px;
+        height: 120px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+    
+    .showtimes-section {
+        border-top: 1px solid var(--border-color);
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+    
+    .showtime-item {
+        background-color: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+    
+    .showtime-item:hover {
+        background-color: #e9ecef;
+        border-color: var(--primary-color) !important;
+    }
+    
+    .price {
+        font-size: 1.1rem;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+    
+    /* Search and Filter Styles */
+    .form-control-sm, .form-select-sm {
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #333;
+    }
+    
+    .form-control-sm:focus, .form-select-sm:focus {
+        background-color: white;
+        border-color: white;
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+    }
+    
+    .form-control-sm::placeholder {
+        color: #666;
+    }
+    
+    .movie-card.hidden {
+        display: none;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const movieSearch = document.getElementById('movieSearch');
+    const genreFilter = document.getElementById('genreFilter');
+    const movieCards = document.querySelectorAll('.movie-card');
+    
+    function filterMovies() {
+        const searchTerm = movieSearch.value.toLowerCase();
+        const selectedGenre = genreFilter.value.toLowerCase();
+        
+        movieCards.forEach(card => {
+            const movieTitle = card.querySelector('.card-title').textContent.toLowerCase();
+            const movieGenre = card.querySelector('.text-muted small').textContent.toLowerCase();
+            
+            const matchesSearch = movieTitle.includes(searchTerm);
+            const matchesGenre = !selectedGenre || movieGenre.includes(selectedGenre);
+            
+            if (matchesSearch && matchesGenre) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+        
+        // Show/hide "no results" message
+        const visibleCards = document.querySelectorAll('.movie-card:not(.hidden)');
+        const noResultsMsg = document.querySelector('.no-results-message');
+        
+        if (visibleCards.length === 0) {
+            if (!noResultsMsg) {
+                const message = document.createElement('div');
+                message.className = 'text-center py-4 no-results-message';
+                message.innerHTML = `
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Movies Found</h5>
+                    <p class="text-muted">Try adjusting your search or filter criteria.</p>
+                `;
+                document.querySelector('#available-movies .card-body').appendChild(message);
+            }
+        } else if (noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    }
+    
+    movieSearch.addEventListener('input', filterMovies);
+    genreFilter.addEventListener('change', filterMovies);
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                <i class="fas fa-ticket-alt me-2"></i>My Bookings
+            </h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'movies:movie_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-film me-2"></i>Browse All Movies
+                    </a>
+                    <a href="#available-movies" class="btn btn-primary">
+                        <i class="fas fa-ticket-alt me-2"></i>Quick Book
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Movies Available in Theaters Section -->
+            <div class="card mb-5" id="available-movies">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-film me-2"></i>Movies Available in Theaters
+                        </h4>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="movieSearch" class="form-control form-control-sm" 
+                                   placeholder="Search movies..." style="width: 200px;">
+                            <select id="genreFilter" class="form-select form-select-sm" style="width: 150px;">
+                                <option value="">All Genres</option>
+                                <option value="action">Action</option>
+                                <option value="comedy">Comedy</option>
+                                <option value="drama">Drama</option>
+                                <option value="horror">Horror</option>
+                                <option value="romance">Romance</option>
+                                <option value="sci-fi">Sci-Fi</option>
+                                <option value="thriller">Thriller</option>
+                                <option value="documentary">Documentary</option>
+                                <option value="animation">Animation</option>
+                                <option value="adventure">Adventure</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if available_movies %}
+                        <!-- Summary Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-center">
+                                <div class="p-3 bg-light rounded">
+                                    <h5 class="text-primary mb-1">{{ available_movies|length }}</h5>
+                                    <small class="text-muted">Movies Available</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="p-3 bg-light rounded">
+                                    <h5 class="text-success mb-1">{{ total_showtimes }}</h5>
+                                    <small class="text-muted">Total Showtimes</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="p-3 bg-light rounded">
+                                    <h5 class="text-info mb-1">{{ unique_theaters_count }}</h5>
+                                    <small class="text-muted">Theaters</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="p-3 bg-light rounded">
+                                    <h5 class="text-warning mb-1">
+                                        {% if earliest_date %}
+                                            {{ earliest_date|date:"M d" }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </h5>
+                                    <small class="text-muted">Earliest Show</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            {% for movie_data in available_movies.values %}
+                            <div class="col-lg-6 col-xl-4 mb-4">
+                                <div class="card h-100 movie-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start mb-3">
+                                            {% if movie_data.movie.poster_display_url %}
+                                                <img src="{{ movie_data.movie.poster_display_url }}" 
+                                                     alt="{{ movie_data.movie.title }}" 
+                                                     class="movie-poster me-3">
+                                            {% else %}
+                                                <div class="movie-poster-placeholder me-3 d-flex align-items-center justify-content-center bg-light">
+                                                    <i class="fas fa-film fa-2x text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <h5 class="card-title mb-2">{{ movie_data.movie.title }}</h5>
+                                                <p class="card-text text-muted mb-1">
+                                                    <small>
+                                                        <i class="fas fa-clock me-1"></i>{{ movie_data.movie.duration_formatted }}
+                                                        <span class="mx-2">•</span>
+                                                        <i class="fas fa-star me-1 text-warning"></i>{{ movie_data.movie.rating }}
+                                                    </small>
+                                                </p>
+                                                <p class="card-text text-muted mb-1">
+                                                    <small>
+                                                        <i class="fas fa-tag me-1"></i>{{ movie_data.movie.get_genre_display }}
+                                                        <span class="mx-2">•</span>
+                                                        <i class="fas fa-language me-1"></i>{{ movie_data.movie.get_language_display }}
+                                                    </small>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="showtimes-section">
+                                            <h6 class="text-primary mb-2">
+                                                <i class="fas fa-calendar-alt me-1"></i>Available Showtimes
+                                            </h6>
+                                            {% for showtime in movie_data.showtimes %}
+                                            <div class="showtime-item d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
+                                                <div>
+                                                    <strong>{{ showtime.theater.name }}</strong><br>
+                                                    <small class="text-muted">
+                                                        {{ showtime.date|date:"M d, Y" }} at {{ showtime.time|time:"g:i A" }}
+                                                    </small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="price mb-1">
+                                                        <strong class="text-success">रु {{ showtime.price }}</strong>
+                                                    </div>
+                                                    <a href="{% url 'booking:select_seats' showtime.id %}" 
+                                                       class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-ticket-alt me-1"></i>Book Now
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                            
+                                            <div class="mt-3 pt-3 border-top">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <a href="{% url 'movies:movie_detail' movie_data.movie.id %}" 
+                                                       class="btn btn-outline-secondary btn-sm">
+                                                        <i class="fas fa-info-circle me-1"></i>View Details
+                                                    </a>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-calendar me-1"></i>Released: {{ movie_data.movie.release_date|date:"M d, Y" }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-film fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Movies Available</h5>
+                            <p class="text-muted">There are currently no movies available in theaters.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- My Bookings Section -->
+            <div class="card mb-5">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>My Booking History
+                    </h4>
+                </div>
+                <div class="card-body">
+            {% if bookings %}
+                {% for booking in bookings %}
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <div>
+                            <h5 class="mb-1">{{ booking.movie_title }}</h5>
+                            <small class="text-muted">Booking ID: {{ booking.booking_id }}</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="booking-status status-{{ booking.booking_status }}">
+                                {{ booking.get_booking_status_display|title }}
+                            </span>
+                            <span class="badge bg-success">रु {{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="booking-details">
+                        <div class="booking-info">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p><strong>Theater:</strong> {{ booking.theater_name }}</p>
+                                    <p><strong>Date & Time:</strong> 
+                                        {{ booking.showtime.date|date:"F d, Y" }} at {{ booking.showtime.time|time:"g:i A" }}
+                                    </p>
+                                    <p><strong>Seats:</strong> {{ booking.seat_count }} seat(s)</p>
+                                    <p><strong>Booked on:</strong> {{ booking.booking_date|date:"M d, Y g:i A" }}</p>
+                                    
+                                    {% if booking.booking_status == 'cancelled' %}
+                                        <div class="refund-info">
+                                            <strong>Cancelled on:</strong> {{ booking.cancelled_at|date:"M d, Y g:i A" }}<br>
+                                            <strong>Refund Amount:</strong> रु {{ booking.refund_amount|default:"0.00" }}<br>
+                                            <strong>Reason:</strong> {{ booking.cancellation_reason|default:"Not specified" }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="booking-actions">
+                                        <a href="{% url 'booking:booking_detail' booking.id %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                        
+                                        {% if booking.booking_status == 'confirmed' %}
+                                            {% if booking.can_cancel %}
+                                                <a href="{% url 'booking:cancel_booking' booking.id %}" 
+                                                   class="btn btn-cancel btn-sm">
+                                                    <i class="fas fa-times me-1"></i>Cancel
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-cancel btn-sm" disabled 
+                                                        title="Cannot cancel within 24 hours of showtime">
+                                                    <i class="fas fa-times me-1"></i>Cannot Cancel
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if booking.booking_status == 'confirmed' and not booking.can_cancel %}
+                                        <div class="mt-2">
+                                            <small class="text-warning">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                Cancellation not allowed within 24 hours of showtime
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-ticket-alt"></i>
+                    <h3>No Bookings Found</h3>
+                    <p class="text-muted">You haven't made any bookings yet. Start by browsing our movies!</p>
+                    <a href="{% url 'movies:movie_list' %}" class="btn btn-primary">
+                        <i class="fas fa-film me-2"></i>Browse Movies
+                    </a>
+                </div>
+            {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Statistics -->
+    {% if bookings %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie me-2"></i>Booking Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-primary">{{ bookings.count }}</h4>
+                            <p class="text-muted mb-0">Total Bookings</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-success">
+                                रु {{ total_amount|floatformat:2 }}
+                            </h4>
+                            <p class="text-muted mb-0">Total Spent</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-info">
+                                {{ confirmed_bookings }}
+                            </h4>
+                            <p class="text-muted mb-0">Active Bookings</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-warning">
+                                {{ cancelled_bookings }}
+                            </h4>
+                            <p class="text-muted mb-0">Cancelled</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

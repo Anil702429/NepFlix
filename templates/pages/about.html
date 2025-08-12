@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* About Hero Section */
+    .about-hero {
+        background: var(--netflix-black);
+        padding: 6rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover;
+        opacity: 0.2;
+        z-index: 1;
+    }
+
+    .about-hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        color: white;
+    }
+
+    .about-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 1s ease-out 0.5s forwards;
+    }
+
+    .about-subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 1s ease-out 0.8s forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Story Section */
+    .story-section {
+        padding: 5rem 0;
+        background: var(--bg-color);
+    }
+
+    .story-content {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.8s ease;
+    }
+
+    .story-content.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .story-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        color: var(--text-color);
+    }
+
+    .story-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-color);
+        opacity: 0.9;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        background: var(--netflix-red);
+        padding: 4rem 0;
+        color: white;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 2rem;
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.6s ease;
+    }
+
+    .stat-item.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    /* Team Section */
+    .team-section {
+        padding: 5rem 0;
+        background: var(--card-bg);
+    }
+
+    .team-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        color: var(--text-color);
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 1s ease-out 0.3s forwards;
+    }
+
+    .team-member {
+        background: var(--bg-color);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        transition: all 0.4s ease;
+        opacity: 0;
+        transform: translateY(50px);
+        border: 1px solid var(--border-color);
+    }
+
+    .team-member.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .team-member:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .member-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 1.5rem;
+        border: 4px solid var(--netflix-red);
+        transition: transform 0.3s ease;
+    }
+
+    .member-image-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--netflix-red);
+        margin: 0 auto 1.5rem;
+        border: 4px solid var(--netflix-red);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        font-weight: bold;
+        transition: transform 0.3s ease;
+    }
+
+    .team-member:hover .member-image,
+    .team-member:hover .member-image-placeholder {
+        transform: scale(1.1);
+    }
+
+    .member-name {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
+
+    .member-position {
+        color: var(--netflix-red);
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    .member-bio {
+        color: var(--text-color);
+        opacity: 0.8;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .member-social {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .social-link {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--netflix-red);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .social-link:hover {
+        background: #b30710;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    /* Values Section */
+    .values-section {
+        padding: 5rem 0;
+        background: var(--bg-color);
+    }
+
+    .value-card {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 15px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        transition: all 0.4s ease;
+        opacity: 0;
+        transform: translateY(50px);
+        margin-bottom: 2rem;
+    }
+
+    .value-card.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .value-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .value-icon {
+        font-size: 3rem;
+        color: var(--netflix-red);
+        margin-bottom: 1rem;
+    }
+
+    .value-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+    }
+
+    .value-description {
+        color: var(--text-color);
+        opacity: 0.8;
+        line-height: 1.6;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .about-title {
+            font-size: 2.5rem;
+        }
+        
+        .story-title, .team-title {
+            font-size: 2rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+    }
+
+    /* Scroll animations */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.6s ease;
+    }
+
+    .animate-on-scroll.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- About Hero Section -->
+<section class="about-hero">
+    <div class="container">
+        <div class="about-hero-content">
+            <h1 class="about-title">
+                <i class="fas fa-users me-3"></i>About NepFlix
+            </h1>
+            <p class="about-subtitle">
+                We're passionate about bringing the best movie experience to our customers
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Story Section -->
+<section class="story-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="story-content animate-on-scroll">
+                    <h2 class="story-title">Our Story</h2>
+                    <div class="story-text">
+                        <p>Founded in 2023, NepFlix was born from a simple idea: making movie booking as enjoyable as watching the movies themselves. Our team of movie enthusiasts and tech experts came together to create a platform that puts the user experience first.</p>
+                        
+                        <p>We believe that every movie night should be special, and that starts with the booking process. That's why we've built NepFlix with cutting-edge technology, intuitive design, and a deep understanding of what movie lovers really want.</p>
+                        
+                        <p>From our humble beginnings to serving thousands of customers today, our mission remains the same: to make movie booking simple, secure, and enjoyable for everyone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="story-content animate-on-scroll">
+                    <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
+                         alt="Movie Theater" class="img-fluid rounded-3 shadow">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            {% for stat in stats %}
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item animate-on-scroll">
+                    <span class="stat-number">{{ stat.number }}</span>
+                    <div class="stat-label">{{ stat.label }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="team-section">
+    <div class="container">
+        <h2 class="team-title">Meet Our Team</h2>
+        <div class="row">
+            {% for member in team_members %}
+            <div class="col-lg-3 col-md-6">
+                <div class="team-member animate-on-scroll">
+                    {% if member.image %}
+                        <img src="{{ member.image }}" alt="{{ member.name }}" class="member-image">
+                    {% else %}
+                        <div class="member-image-placeholder">
+                            <span>{{ member.name|first|upper }}</span>
+                        </div>
+                    {% endif %}
+                    <h3 class="member-name">{{ member.name }}</h3>
+                    <div class="member-position">{{ member.position }}</div>
+                    <p class="member-bio">{{ member.bio }}</p>
+                    <div class="member-social">
+                        <a href="{{ member.social.linkedin }}" class="social-link" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="{{ member.social.twitter }}" class="social-link" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="mailto:{{ member.social.email }}" class="social-link" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Values Section -->
+<section class="values-section">
+    <div class="container">
+        <h2 class="team-title">Our Values</h2>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="value-card animate-on-scroll">
+                    <div class="value-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 class="value-title">Customer First</h3>
+                    <p class="value-description">
+                        Every decision we make is guided by what's best for our customers. Your satisfaction is our top priority.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="value-card animate-on-scroll">
+                    <div class="value-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 class="value-title">Innovation</h3>
+                    <p class="value-description">
+                        We constantly push the boundaries of technology to create the best possible user experience.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="value-card animate-on-scroll">
+                    <div class="value-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="value-title">Security</h3>
+                    <p class="value-description">
+                        Your data and payment information are protected with the highest security standards.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="value-card animate-on-scroll">
+                    <div class="value-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3 class="value-title">Trust</h3>
+                    <p class="value-description">
+                        We build lasting relationships with our customers through transparency and reliability.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="value-card animate-on-scroll">
+                    <div class="value-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="value-title">Community</h3>
+                    <p class="value-description">
+                        We foster a community of movie lovers who share our passion for great entertainment.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="value-card animate-on-scroll">
+                    <div class="value-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3 class="value-title">Excellence</h3>
+                    <p class="value-description">
+                        We strive for excellence in everything we do, from our technology to our customer service.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+            }
+        });
+    }, observerOptions);
+
+    // Observe all elements with animate-on-scroll class
+    document.addEventListener('DOMContentLoaded', () => {
+        const animateElements = document.querySelectorAll('.animate-on-scroll');
+        animateElements.forEach(el => observer.observe(el));
+    });
+
+    // Add staggered animation to team members
+    const teamMembers = document.querySelectorAll('.team-member');
+    teamMembers.forEach((member, index) => {
+        member.style.transitionDelay = `${index * 0.1}s`;
+    });
+
+    // Add staggered animation to value cards
+    const valueCards = document.querySelectorAll('.value-card');
+    valueCards.forEach((card, index) => {
+        card.style.transitionDelay = `${index * 0.1}s`;
+    });
+</script>
+{% endblock %} 

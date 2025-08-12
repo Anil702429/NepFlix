@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cancel Booking - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cancellation-container {
+        background-color: var(--card-bg);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .booking-info {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .refund-info {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .warning-info {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .form-control, .form-select {
+        background-color: var(--bg-color);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background-color: var(--bg-color);
+        border-color: var(--primary-color);
+        color: var(--text-color);
+        box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
+    }
+    
+    .btn-cancel {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
+    }
+    
+    .info-item {
+        margin-bottom: 15px;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        color: var(--text-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Booking Information -->
+            <div class="booking-info">
+                <h3><i class="fas fa-ticket-alt me-2"></i>Booking Details</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">Movie</div>
+                            <div class="info-value">{{ booking.movie_title }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Theater</div>
+                            <div class="info-value">{{ booking.theater_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Date & Time</div>
+                            <div class="info-value">
+                                {{ booking.showtime.date|date:"F d, Y" }} at {{ booking.showtime.time|time:"g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <div class="info-label">Booking ID</div>
+                            <div class="info-value">{{ booking.booking_id }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Amount</div>
+                            <div class="info-value">रु {{ booking.total_amount }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Seats</div>
+                            <div class="info-value">{{ booking.seat_count }} seat(s)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refund Information -->
+            <div class="refund-info">
+                <h4><i class="fas fa-money-bill-wave me-2"></i>Refund Information</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Refund Percentage:</strong> {{ refund_percentage }}%</p>
+                        <p><strong>Refund Amount:</strong> रु {{ refund_amount|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Processing Time:</strong> 3-5 business days</p>
+                        <p><strong>Payment Method:</strong> Original payment method</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cancellation Policy Warning -->
+            <div class="warning-info">
+                <h4><i class="fas fa-exclamation-triangle me-2"></i>Important Information</h4>
+                <ul class="mb-0">
+                    <li>Cancellation is only allowed up to 24 hours before the showtime</li>
+                    <li>Refund percentage depends on cancellation time:
+                        <ul>
+                            <li><strong>24+ hours before:</strong> 100% refund</li>
+                            <li><strong>2-24 hours before:</strong> 50% refund</li>
+                            <li><strong>Less than 2 hours:</strong> No refund</li>
+                        </ul>
+                    </li>
+                    <li>This action cannot be undone once confirmed</li>
+                </ul>
+            </div>
+
+            <!-- Cancellation Form -->
+            <div class="cancellation-container">
+                <h3><i class="fas fa-times-circle me-2"></i>Cancel Booking</h3>
+                <p class="text-muted mb-4">Please provide a reason for cancellation to help us improve our service.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for Cancellation *</label>
+                        {{ form.reason }}
+                        <div class="help-text">Please select the primary reason for your cancellation</div>
+                        {% if form.reason.errors %}
+                        <div class="text-danger mt-2">
+                            {% for error in form.reason.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.additional_notes.id_for_label }}" class="form-label">Additional Notes</label>
+                        {{ form.additional_notes }}
+                        <div class="help-text">Optional: Provide additional details about your cancellation</div>
+                        {% if form.additional_notes.errors %}
+                        <div class="text-danger mt-2">
+                            {% for error in form.additional_notes.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Confirmation Checkbox -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmCancellation" required>
+                            <label class="form-check-label" for="confirmCancellation">
+                                I understand that this cancellation cannot be undone and I will receive a refund of रु {{ refund_amount|floatformat:2 }} ({{ refund_percentage }}% of the total amount)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-cancel" id="cancelButton" disabled>
+                            <i class="fas fa-times me-2"></i>Confirm Cancellation
+                        </button>
+                        <a href="{% url 'booking:booking_detail' booking.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Booking
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-headset me-2"></i>Need Help?</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">If you have any questions about your cancellation or refund, please contact our support team:</p>
+                    <ul class="mb-0">
+                                                    <li><strong>Email:</strong> support@nepflix.com</li>
+                        <li><strong>Phone:</strong> +1 (555) 123-4567</li>
+                        <li><strong>Hours:</strong> Monday-Friday, 9 AM - 6 PM EST</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enable/disable cancel button based on confirmation checkbox
+    const confirmCheckbox = document.getElementById('confirmCancellation');
+    const cancelButton = document.getElementById('cancelButton');
+    
+    confirmCheckbox.addEventListener('change', function() {
+        cancelButton.disabled = !this.checked;
+    });
+    
+    // Auto-resize textarea
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    }
+    
+    // Confirmation dialog
+    cancelButton.addEventListener('click', function(e) {
+        if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %} 

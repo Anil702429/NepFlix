@@ -1,0 +1,580 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-form {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .booking-summary {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 20px;
+    }
+    .form-section {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-section h5 {
+        color: #495057;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        font-weight: 600;
+    }
+    .form-check {
+        padding: 12px 15px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+    }
+    .form-check:hover {
+        background-color: #f8f9fa;
+        border-color: #007bff;
+    }
+    .form-check-input:checked + .form-check-label {
+        color: #007bff;
+        font-weight: 600;
+    }
+    .form-check-input:checked ~ .form-check {
+        background-color: #e3f2fd;
+        border-color: #007bff;
+    }
+    .payment-method-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+    }
+    .alert {
+        border-radius: 6px;
+        border: none;
+    }
+    .alert-info {
+        background-color: #e3f2fd;
+        color: #0c5460;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .form-control {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 10px 12px;
+        transition: border-color 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 6px 10px;
+    }
+    .progress-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    .progress-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    .progress-step::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        width: 30px;
+        height: 30px;
+        background: #e9ecef;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+    }
+    .progress-step.active::before {
+        background: #007bff;
+        color: white;
+    }
+    .progress-step.completed::before {
+        background: #28a745;
+        color: white;
+    }
+    .progress-step::after {
+        content: '';
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: #e9ecef;
+        transform: translateX(-50%);
+    }
+    .progress-step:last-child::after {
+        display: none;
+    }
+    .progress-step.completed::after {
+        background: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Progress Indicator -->
+    <div class="progress-indicator mb-4">
+        <div class="progress-step completed">
+            <div class="mt-4">
+                <small class="text-muted">1. Select Movie</small>
+            </div>
+        </div>
+        <div class="progress-step completed">
+            <div class="mt-4">
+                <small class="text-muted">2. Choose Seats</small>
+            </div>
+        </div>
+        <div class="progress-step active">
+            <div class="mt-4">
+                <small class="text-primary fw-bold">3. Payment</small>
+            </div>
+        </div>
+        <div class="progress-step">
+            <div class="mt-4">
+                <small class="text-muted">4. Confirmation</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="payment-form">
+                <h3 class="mb-4">
+                    <i class="fas fa-credit-card me-2"></i>Payment Information
+                </h3>
+                
+                <form id="payment-form" method="post" action="{% url 'booking:process_payment' booking.booking_id %}">
+                    {% csrf_token %}
+                    
+                    <!-- Payment Method Selection -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-credit-card me-2"></i>Payment Method</h5>
+                        
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="credit_card" value="credit_card" checked>
+                                <label class="form-check-label" for="credit_card">
+                                    <i class="fas fa-credit-card me-2"></i>Credit/Debit Card
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="khalti" value="khalti">
+                                <label class="form-check-label" for="khalti">
+                                    <i class="fas fa-mobile-alt me-2"></i>Khalti Digital Wallet
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="esewa" value="esewa">
+                                <label class="form-check-label" for="esewa">
+                                    <i class="fas fa-wallet me-2"></i>eSewa
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="cash" value="cash">
+                                <label class="form-check-label" for="cash">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Cash at Counter
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Information Section -->
+                    <div class="form-section" id="card-section">
+                        <h5><i class="fas fa-credit-card me-2"></i>Card Information</h5>
+                        
+                        <div class="mb-3">
+                            <label for="card-element" class="form-label">Credit or debit card</label>
+                            <div id="card-element" class="form-control">
+                                <!-- Stripe Elements will create input elements here -->
+                            </div>
+                            <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cardholder_name" class="form-label">Cardholder Name *</label>
+                            <input type="text" class="form-control" id="cardholder_name" name="cardholder_name" 
+                                   placeholder="Name as it appears on card" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Digital Wallet Information -->
+                    <div class="form-section" id="digital-wallet-section" style="display: none;">
+                        <h5><i class="fas fa-mobile-alt me-2"></i>Digital Wallet Information</h5>
+                        
+                        <div class="mb-3">
+                            <label for="mobile_number" class="form-label">Mobile Number *</label>
+                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number" 
+                                   placeholder="98XXXXXXXX" pattern="[0-9]{10}">
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You will receive a payment request on your mobile number. Please complete the payment to confirm your booking.
+                        </div>
+                    </div>
+                    
+                    <!-- Cash Payment Information -->
+                    <div class="form-section" id="cash-section" style="display: none;">
+                        <h5><i class="fas fa-money-bill-wave me-2"></i>Cash Payment</h5>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> Please pay the full amount at the theater counter before the showtime. 
+                            Your booking will be confirmed once payment is received.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="payment_verification" class="form-label">Payment Verification Code</label>
+                            <input type="text" class="form-control" id="payment_verification" name="payment_verification" 
+                                   placeholder="Enter code provided by theater staff (optional)">
+                        </div>
+                    </div>
+                    
+                    <!-- Billing Information Section -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-map-marker-alt me-2"></i>Billing Information</h5>
+                        
+                        <div class="mb-3">
+                            <label for="billing_email" class="form-label">Email Address *</label>
+                            <input type="email" class="form-control" id="billing_email" name="billing_email" 
+                                   value="{{ user.email }}" placeholder="your@email.com" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="billing_address" class="form-label">Billing Address *</label>
+                            <input type="text" class="form-control" id="billing_address" name="billing_address" 
+                                   placeholder="Street address" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="billing_city" class="form-label">City *</label>
+                                <input type="text" class="form-control" id="billing_city" name="billing_city" 
+                                       placeholder="City" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="billing_state" class="form-label">State/Province *</label>
+                                <input type="text" class="form-control" id="billing_state" name="billing_state" 
+                                       placeholder="State" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="billing_zip" class="form-label">ZIP/Postal Code *</label>
+                                <input type="text" class="form-control" id="billing_zip" name="billing_zip" 
+                                       placeholder="ZIP code" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="billing_country" class="form-label">Country *</label>
+                                <select class="form-control" id="billing_country" name="billing_country" required>
+                                    <option value="">Select Country</option>
+                                    <option value="Nepal" selected>Nepal</option>
+                                    <option value="India">India</option>
+                                    <option value="United States">United States</option>
+                                    <option value="United Kingdom">United Kingdom</option>
+                                    <option value="Canada">Canada</option>
+                                    <option value="Australia">Australia</option>
+                                    <option value="Germany">Germany</option>
+                                    <option value="France">France</option>
+                                    <option value="Japan">Japan</option>
+                                    <option value="China">China</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Summary -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-receipt me-2"></i>Payment Summary</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Amount to pay:</span>
+                            <span class="fw-bold">रु {{ booking.total_amount }}</span>
+                        </div>
+                        
+                        <!-- Security Notice -->
+                        <div class="alert alert-success">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Secure Payment:</strong> Your payment information is encrypted and secure. We use industry-standard SSL encryption.
+                        </div>
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms_accepted" required>
+                                <label class="form-check-label" for="terms_accepted">
+                                    I agree to the <a href="#" class="text-primary">Terms and Conditions</a> and <a href="#" class="text-primary">Privacy Policy</a> *
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            By clicking "Pay Now", you agree to our terms and conditions.
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="submit-button">
+                        <i class="fas fa-lock me-2"></i>Pay रु {{ booking.total_amount }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="booking-summary">
+                <h4 class="mb-3">
+                    <i class="fas fa-ticket-alt me-2"></i>Booking Summary
+                </h4>
+                
+                <div class="mb-3">
+                    <h6>{{ booking.showtime.movie.title }}</h6>
+                    <p class="text-muted mb-0">{{ booking.showtime.theater.name }}</p>
+                    <p class="text-muted mb-0">
+                        {{ booking.showtime.date|date:"F d, Y" }} at {{ booking.showtime.time|time:"g:i A" }}
+                    </p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <h6>Selected Seats:</h6>
+                    <div class="d-flex flex-wrap">
+                        {% for seat in booking.seats.all %}
+                        <span class="badge bg-primary me-1 mb-1">{{ seat.row }}{{ seat.seat_number }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Price per seat:</span>
+                    <span>रु {{ booking.showtime.price }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Number of seats:</span>
+                    <span>{{ booking.seats.count }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total:</span>
+                    <span>रु {{ booking.total_amount }}</span>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your payment is secured by Stripe. We never store your card information.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// Create a Stripe client
+const stripe = Stripe('{{ stripe_publishable_key }}');
+const elements = stripe.elements();
+
+// Create an instance of the card Element
+const card = elements.create('card', {
+    style: {
+        base: {
+            fontSize: '16px',
+            color: '#424770',
+            '::placeholder': {
+                color: '#aab7c4',
+            },
+        },
+        invalid: {
+            color: '#9e2146',
+        },
+    },
+});
+
+// Add an instance of the card Element into the `card-element` <div>
+card.mount('#card-element');
+
+// Handle real-time validation errors from the card Element
+card.addEventListener('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+        displayError.textContent = event.error.message;
+    } else {
+        displayError.textContent = '';
+    }
+});
+
+// Payment method selection handling
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const cardSection = document.getElementById('card-section');
+    const digitalWalletSection = document.getElementById('digital-wallet-section');
+    const cashSection = document.getElementById('cash-section');
+    const billingSection = document.querySelector('.form-section:nth-child(4)'); // Billing section
+    
+    function togglePaymentSections() {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        // Hide all sections first
+        cardSection.style.display = 'none';
+        digitalWalletSection.style.display = 'none';
+        cashSection.style.display = 'none';
+        
+        // Show appropriate section based on selection
+        switch(selectedMethod) {
+            case 'credit_card':
+                cardSection.style.display = 'block';
+                billingSection.style.display = 'block';
+                break;
+            case 'khalti':
+            case 'esewa':
+                digitalWalletSection.style.display = 'block';
+                billingSection.style.display = 'none';
+                break;
+            case 'cash':
+                cashSection.style.display = 'block';
+                billingSection.style.display = 'none';
+                break;
+        }
+    }
+    
+    // Add event listeners to payment method radio buttons
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', togglePaymentSections);
+    });
+    
+    // Initialize sections on page load
+    togglePaymentSections();
+});
+
+// Handle form submission
+const form = document.getElementById('payment-form');
+const submitButton = document.getElementById('submit-button');
+
+form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    // Check terms acceptance
+    const termsAccepted = document.getElementById('terms_accepted').checked;
+    if (!termsAccepted) {
+        alert('Please accept the terms and conditions to proceed.');
+        return;
+    }
+    
+    const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    // Validate form fields based on payment method
+    if (selectedMethod === 'credit_card') {
+        // Validate card payment fields
+        const cardholderName = document.getElementById('cardholder_name').value.trim();
+        const billingEmail = document.getElementById('billing_email').value.trim();
+        const billingAddress = document.getElementById('billing_address').value.trim();
+        const billingCity = document.getElementById('billing_city').value.trim();
+        const billingState = document.getElementById('billing_state').value.trim();
+        const billingZip = document.getElementById('billing_zip').value.trim();
+        const billingCountry = document.getElementById('billing_country').value;
+        
+        if (!cardholderName || !billingEmail || !billingAddress || !billingCity || !billingState || !billingZip || !billingCountry) {
+            alert('Please fill in all required fields for card payment.');
+            return;
+        }
+        
+        // Process card payment with Stripe
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        stripe.createToken(card).then(function(result) {
+            if (result.error) {
+                const errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Pay रु {{ booking.total_amount }}';
+            } else {
+                stripeTokenHandler(result.token);
+            }
+        });
+        
+    } else if (selectedMethod === 'khalti' || selectedMethod === 'esewa') {
+        // Validate digital wallet fields
+        const mobileNumber = document.getElementById('mobile_number').value.trim();
+        
+        if (!mobileNumber || mobileNumber.length !== 10) {
+            alert('Please enter a valid 10-digit mobile number.');
+            return;
+        }
+        
+        // Process digital wallet payment
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        // Simulate digital wallet payment processing
+        setTimeout(() => {
+            stripeTokenHandler({ id: 'digital_wallet_token' });
+        }, 2000);
+        
+    } else if (selectedMethod === 'cash') {
+        // Process cash payment
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        // Simulate cash payment processing
+        setTimeout(() => {
+            stripeTokenHandler({ id: 'cash_payment_token' });
+        }, 1000);
+    }
+});
+
+function stripeTokenHandler(token) {
+    // Insert the token ID into the form so it gets submitted to the server
+    const hiddenInput = document.createElement('input');
+    hiddenInput.setAttribute('type', 'hidden');
+    hiddenInput.setAttribute('name', 'stripeToken');
+    hiddenInput.setAttribute('value', token.id);
+    form.appendChild(hiddenInput);
+    
+    // Submit the form
+    form.submit();
+}
+</script>
+{% endblock %} 

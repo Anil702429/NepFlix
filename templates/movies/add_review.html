@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if existing_review %}Edit Review{% else %}Write Review{% endif %} - {{ movie.title }} - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-form-container {
+        background-color: var(--card-bg);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .movie-info-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 5px;
+    }
+    
+    .rating-input input {
+        display: none;
+    }
+    
+    .rating-input label {
+        cursor: pointer;
+        font-size: 2rem;
+        color: #ddd;
+        transition: color 0.2s ease;
+    }
+    
+    .rating-input label:hover,
+    .rating-input label:hover ~ label,
+    .rating-input input:checked ~ label {
+        color: #ffc107;
+    }
+    
+    .form-label {
+        font-weight: bold;
+        color: var(--text-color);
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        background-color: var(--bg-color);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background-color: var(--bg-color);
+        border-color: var(--primary-color);
+        color: var(--text-color);
+        box-shadow: 0 0 0 0.2rem rgba(229, 9, 20, 0.25);
+    }
+    
+    .btn-submit {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-submit:hover {
+        background-color: #b30710;
+        border-color: #b30710;
+        color: white;
+    }
+    
+    .help-text {
+        color: var(--text-color);
+        opacity: 0.7;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Movie Info Card -->
+            <div class="movie-info-card">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                                    {% if movie.poster_display_url %}
+            <img src="{{ movie.poster_display_url }}" alt="{{ movie.title }}" class="img-fluid rounded">
+                        {% else %}
+                        <img src="https://via.placeholder.com/200x300?text=No+Poster" alt="{{ movie.title }}" class="img-fluid rounded">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h3>{{ movie.title }}</h3>
+                        <p class="text-muted mb-2">
+                            <span class="badge bg-primary me-2">{{ movie.get_genre_display }}</span>
+                            <span class="badge bg-secondary me-2">{{ movie.get_language_display }}</span>
+                            <span class="badge bg-info">{{ movie.duration_formatted }}</span>
+                        </p>
+                        <p class="mb-0">{{ movie.description|truncatewords:30 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="review-form-container">
+                <h2 class="mb-4">
+                    <i class="fas fa-star me-2"></i>
+                    {% if existing_review %}Edit Your Review{% else %}Write a Review{% endif %}
+                </h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Rating -->
+                    <div class="mb-4">
+                        <label class="form-label">Rating *</label>
+                        <div class="rating-input">
+                            <input type="radio" name="rating" value="5" id="star5" {% if form.rating.value == 5 %}checked{% endif %} required>
+                            <label for="star5" title="5 stars">★</label>
+                            <input type="radio" name="rating" value="4" id="star4" {% if form.rating.value == 4 %}checked{% endif %} required>
+                            <label for="star4" title="4 stars">★</label>
+                            <input type="radio" name="rating" value="3" id="star3" {% if form.rating.value == 3 %}checked{% endif %} required>
+                            <label for="star3" title="3 stars">★</label>
+                            <input type="radio" name="rating" value="2" id="star2" {% if form.rating.value == 2 %}checked{% endif %} required>
+                            <label for="star2" title="2 stars">★</label>
+                            <input type="radio" name="rating" value="1" id="star1" {% if form.rating.value == 1 %}checked{% endif %} required>
+                            <label for="star1" title="1 star">★</label>
+                        </div>
+                        <div class="help-text">Click on a star to rate this movie (1-5 stars)</div>
+                        {% if form.rating.errors %}
+                        <div class="text-danger mt-2">
+                            {% for error in form.rating.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Review Title -->
+                    <div class="mb-4">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Review Title *</label>
+                        {{ form.title }}
+                        <div class="help-text">Give your review a catchy title (minimum 5 characters)</div>
+                        {% if form.title.errors %}
+                        <div class="text-danger mt-2">
+                            {% for error in form.title.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Review Content -->
+                    <div class="mb-4">
+                        <label for="{{ form.content.id_for_label }}" class="form-label">Review Content *</label>
+                        {{ form.content }}
+                        <div class="help-text">Share your thoughts about the movie (minimum 20 characters)</div>
+                        {% if form.content.errors %}
+                        <div class="text-danger mt-2">
+                            {% for error in form.content.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-submit">
+                            <i class="fas fa-save me-2"></i>
+                            {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+                        </button>
+                        <a href="{% url 'movies:movie_detail' movie.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Review Guidelines -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle me-2"></i>Review Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Be honest and constructive in your review</li>
+                        <li>Avoid spoilers without proper warnings</li>
+                        <li>Keep your review respectful and appropriate</li>
+                        <li>Share specific details about what you liked or disliked</li>
+                        <li>Consider the movie's target audience and genre</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-resize textarea
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    }
+    
+    // Rating stars interaction
+    const ratingInputs = document.querySelectorAll('.rating-input input');
+    const ratingLabels = document.querySelectorAll('.rating-input label');
+    
+    ratingLabels.forEach((label, index) => {
+        label.addEventListener('mouseenter', () => {
+            ratingLabels.forEach((l, i) => {
+                if (i <= index) {
+                    l.style.color = '#ffc107';
+                }
+            });
+        });
+        
+        label.addEventListener('mouseleave', () => {
+            ratingLabels.forEach((l, i) => {
+                if (!ratingInputs[i].checked) {
+                    l.style.color = '#ddd';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

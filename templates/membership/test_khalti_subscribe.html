@@ -1,0 +1,670 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Test Khalti Subscribe - {{ tier.get_name_display }} - NepFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .test-khalti-hero {
+        background: var(--netflix-black);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+    
+    .test-khalti-container {
+        padding: 60px 0;
+        background: #f8f9fa;
+    }
+    
+    .plan-summary {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .plan-summary h3 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .plan-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .plan-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--netflix-red);
+    }
+    
+    .test-khalti-form {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .test-khalti-form h4 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .btn-test-khalti {
+        background: linear-gradient(135deg, #5C2D91 0%, #7B3FCC 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-test-khalti:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(92, 45, 145, 0.3);
+        color: white;
+    }
+    
+    .btn-test-khalti:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .btn-test-khalti .test-tube-icon {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+    
+    .features-list li {
+        padding: 8px 0;
+        color: #555;
+        position: relative;
+        padding-left: 25px;
+    }
+    
+    .features-list li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .test-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .test-notice i {
+        color: #856404;
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .khalti-simulation {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+    
+    .khalti-simulation i {
+        color: #5C2D91;
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    /* Success Dialog Styles */
+    .success-dialog {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .success-dialog.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .success-dialog-content {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.4s ease;
+    }
+    
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: #28a745;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: scaleIn 0.5s ease 0.2s both;
+    }
+    
+    .success-icon i {
+        color: white;
+        font-size: 2.5rem;
+    }
+    
+    .success-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .success-amount {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+    
+    .success-message {
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .success-close-btn {
+        background: #5C2D91;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .success-close-btn:hover {
+        background: #4a1f7a;
+        transform: translateY(-2px);
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes scaleIn {
+        from { 
+            transform: scale(0);
+        }
+        to { 
+            transform: scale(1);
+        }
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="test-khalti-hero">
+    <div class="container">
+        <h1>Test Khalti Payment</h1>
+        <p>This is a test Khalti payment page for demonstration purposes</p>
+    </div>
+</section>
+
+<!-- Test Khalti Subscription Form -->
+<section class="test-khalti-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Plan Summary -->
+                <div class="plan-summary">
+                    <h3>Plan Summary</h3>
+                    <div class="plan-details">
+                        <div class="plan-name">{{ tier.get_name_display }} Plan</div>
+                        <div class="plan-price">रु {{ tier.price }}/month</div>
+                    </div>
+                    <p class="text-muted">{{ tier.description }}</p>
+                    
+                    <ul class="features-list">
+                        {% for feature in tier.features %}
+                            <li>{{ feature }}</li>
+                        {% endfor %}
+                        <li>Up to {{ tier.max_screens }} screen{{ tier.max_screens|pluralize }}</li>
+                        <li>{{ tier.max_quality }} quality</li>
+                        <li>Cancel anytime</li>
+                    </ul>
+                </div>
+                
+                <!-- Test Khalti Form -->
+                <div class="test-khalti-form">
+                    <h4>Test Khalti Payment</h4>
+                    
+                    <div class="khalti-simulation">
+                        <i class="fas fa-wallet"></i>
+                        <h5>Khalti Digital Wallet</h5>
+                        <p>Simulating Khalti payment process...</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Test Mode:</strong> This will create a test subscription using Khalti payment method without real payment processing.
+                    </div>
+                    
+                    <!-- Hidden CSRF token for AJAX requests -->
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    
+                    <button type="button" class="btn btn-test-khalti" id="test-payment-btn">
+                        <i class="fas fa-vial test-tube-icon"></i>
+                        TEST PAYMENT ₹ {{ tier.price }}.00 (DUMMY)
+                        <div class="spinner" id="payment-spinner"></div>
+                    </button>
+                    
+                    <div class="test-notice">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Test Mode</strong> - This subscription will be created for demonstration purposes only. No real payment will be processed through Khalti.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Success Dialog -->
+<div class="success-dialog" id="success-dialog">
+    <div class="success-dialog-content">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <h2 class="success-title">Payment Successful!</h2>
+        <div class="success-amount">₹ {{ tier.price }}.00</div>
+        <p class="success-message">
+            Your test payment has been processed successfully. 
+            The subscription has been activated for demonstration purposes.
+        </p>
+        <button class="success-close-btn" onclick="closeSuccessDialog()">
+            Continue
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Immediately fix ALL form validation issues
+(function() {
+    'use strict';
+    
+    console.log('Applying comprehensive form validation fix...');
+    
+    // Function to fix ALL problematic form elements
+    function fixFormElements() {
+        console.log('Running comprehensive form fix...');
+        
+        // Target ALL possible problematic elements
+        const problematicElements = [
+            'input[name="email"]',
+            'input[name="cardholder_name"]',
+            'input[name="full_name"]',
+            'input[name="mobile_number"]',
+            'input[id="card-email"]',
+            'input[id="card-name"]',
+            'input[id="khalti-mobile"]',
+            'input[id="khalti-dummy-mobile"]',
+            'input[id="esewa-mobile"]',
+            'input[id="khalti-name"]',
+            'input[id="khalti-dummy-name"]',
+            'input[id="esewa-name"]',
+            'input[required]',
+            'select[required]',
+            'textarea[required]'
+        ];
+        
+        problematicElements.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                // Remove ALL validation attributes
+                element.removeAttribute('required');
+                element.removeAttribute('pattern');
+                element.removeAttribute('minlength');
+                element.removeAttribute('maxlength');
+                element.removeAttribute('max');
+                element.removeAttribute('min');
+                element.removeAttribute('step');
+                
+                // Disable and hide the element completely
+                element.setAttribute('disabled', 'disabled');
+                element.style.display = 'none';
+                element.style.visibility = 'hidden';
+                element.style.position = 'absolute';
+                element.style.left = '-9999px';
+                element.style.opacity = '0';
+                element.style.pointerEvents = 'none';
+                
+                // Remove from tab order
+                element.setAttribute('tabindex', '-1');
+                
+                console.log('Completely disabled element:', selector, element.name || element.id);
+            });
+        });
+        
+        // Also disable any forms that might contain these elements
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.setAttribute('novalidate', 'novalidate');
+            console.log('Form disabled:', form);
+        });
+        
+        // Additional fix: Remove required from any hidden or non-visible elements
+        const allRequiredInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
+        allRequiredInputs.forEach(input => {
+            // Check if element is hidden or not visible
+            const isHidden = input.offsetParent === null || 
+                           input.style.display === 'none' || 
+                           input.style.visibility === 'hidden' ||
+                           input.style.position === 'absolute' ||
+                           input.style.left === '-9999px';
+            
+            if (isHidden) {
+                input.removeAttribute('required');
+                input.removeAttribute('pattern');
+                input.removeAttribute('minlength');
+                input.removeAttribute('maxlength');
+                console.log('Removed required from hidden element:', input.name || input.id);
+            }
+        });
+    }
+    
+    // Run immediately
+    fixFormElements();
+    
+    // Also run when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fixFormElements);
+    } else {
+        fixFormElements();
+    }
+    
+    // Run periodically to catch any dynamically added elements
+    setInterval(fixFormElements, 500);
+    
+    // Prevent form validation errors globally
+    document.addEventListener('submit', function(e) {
+        // Remove required attributes from all form elements before submission
+        const formElements = e.target.querySelectorAll('input, select, textarea');
+        formElements.forEach(element => {
+            element.removeAttribute('required');
+            element.removeAttribute('pattern');
+            element.removeAttribute('minlength');
+            element.removeAttribute('maxlength');
+        });
+        
+        // Add novalidate to the form
+        e.target.setAttribute('novalidate', 'novalidate');
+        
+        console.log('Form submission validation disabled');
+    });
+    
+    // Completely disable HTML5 validation globally
+    document.addEventListener('invalid', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('Prevented invalid event for:', e.target.name || e.target.id);
+        return false;
+    }, true);
+    
+    // Prevent form submission validation
+    document.addEventListener('submit', function(e) {
+        // Remove ALL validation attributes from the form being submitted
+        const formElements = e.target.querySelectorAll('input, select, textarea');
+        formElements.forEach(element => {
+            element.removeAttribute('required');
+            element.removeAttribute('pattern');
+            element.removeAttribute('minlength');
+            element.removeAttribute('maxlength');
+            element.removeAttribute('max');
+            element.removeAttribute('min');
+            element.removeAttribute('step');
+        });
+        
+        // Add novalidate to the form
+        e.target.setAttribute('novalidate', 'novalidate');
+        
+        console.log('Form submission validation completely disabled for:', e.target.id || 'unnamed form');
+    }, true);
+    
+    // Override form validation methods
+    if (HTMLFormElement.prototype) {
+        HTMLFormElement.prototype.checkValidity = function() {
+            return true; // Always return true to bypass validation
+        };
+        
+        HTMLFormElement.prototype.reportValidity = function() {
+            return true; // Always return true to bypass validation
+        };
+    }
+    
+    // Override input validation methods
+    if (HTMLInputElement.prototype) {
+        HTMLInputElement.prototype.checkValidity = function() {
+            return true;
+        };
+        
+        HTMLInputElement.prototype.reportValidity = function() {
+            return true;
+        };
+    }
+    
+    // Final layer: Complete page isolation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove ALL forms except the test payment form
+        const allForms = document.querySelectorAll('form');
+        allForms.forEach(form => {
+            if (!form.id || !form.id.includes('test')) {
+                // This is not our test form, disable it completely
+                form.style.display = 'none';
+                form.style.visibility = 'hidden';
+                form.style.position = 'absolute';
+                form.style.left = '-9999px';
+                form.setAttribute('novalidate', 'novalidate');
+                
+                // Disable all elements in this form
+                const formElements = form.querySelectorAll('input, select, textarea');
+                formElements.forEach(element => {
+                    element.disabled = true;
+                    element.removeAttribute('required');
+                    element.removeAttribute('pattern');
+                    element.removeAttribute('minlength');
+                    element.removeAttribute('maxlength');
+                });
+                
+                console.log('Completely disabled non-test form:', form.id || 'unnamed form');
+            }
+        });
+    });
+    
+    console.log('Comprehensive form validation fix applied');
+})();
+
+// Wait for the page to load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, setting up payment button...');
+    
+    // Get the button and spinner
+    const button = document.getElementById('test-payment-btn');
+    const spinner = document.getElementById('payment-spinner');
+    
+    if (!button) {
+        console.error('Payment button not found!');
+        return;
+    }
+    
+    if (!spinner) {
+        console.error('Spinner not found!');
+        return;
+    }
+    
+    console.log('Button and spinner found, adding click handler...');
+    
+    // Add click event listener
+    button.addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent any form submission
+        console.log('Button clicked!');
+        processTestPayment();
+    });
+    
+    console.log('Click handler added successfully');
+});
+
+function processTestPayment() {
+    console.log('Processing test payment...');
+    
+    const button = document.getElementById('test-payment-btn');
+    const spinner = document.getElementById('payment-spinner');
+    
+    // Disable button and show spinner
+    button.disabled = true;
+    spinner.style.display = 'inline-block';
+    
+    console.log('Button disabled and spinner shown');
+    
+    // Get CSRF token from hidden input
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    console.log('CSRF token found:', csrfToken ? 'Yes' : 'No');
+    
+    // Send AJAX request
+    fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+            action: 'test_payment'
+        })
+    })
+    .then(response => {
+        console.log('Response received:', response);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data received:', data);
+        if (data.success) {
+            console.log('Payment successful, showing dialog...');
+            // Show success dialog
+            showSuccessDialog();
+        } else {
+            console.log('Payment failed:', data.error);
+            alert(data.error || 'Payment failed. Please try again.');
+            // Re-enable button
+            button.disabled = false;
+            spinner.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error in fetch:', error);
+        alert('An error occurred. Please try again.');
+        // Re-enable button
+        button.disabled = false;
+        spinner.style.display = 'none';
+    });
+}
+
+function showSuccessDialog() {
+    console.log('Showing success dialog...');
+    const dialog = document.getElementById('success-dialog');
+    if (dialog) {
+        dialog.classList.add('show');
+        console.log('Success dialog shown');
+    } else {
+        console.error('Success dialog not found!');
+    }
+}
+
+function closeSuccessDialog() {
+    console.log('Closing success dialog...');
+    const dialog = document.getElementById('success-dialog');
+    if (dialog) {
+        dialog.classList.remove('show');
+        console.log('Success dialog closed');
+        
+        // Redirect to my membership page after a short delay
+        setTimeout(() => {
+            console.log('Redirecting to membership page...');
+            window.location.href = '{% url "membership:my_membership" %}';
+        }, 500);
+    }
+}
+</script>
+{% endblock %} 
