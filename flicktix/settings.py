@@ -21,12 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-7#8os1hab*8^^(9_&9&@-kxz+snf_x1g0--^+-*d3^br8leivz"
+# Must be set via DJANGO_SECRET_KEY environment variable
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -144,17 +145,28 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Email settings (for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email settings
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 
-# Stripe settings (add your keys here)
-STRIPE_PUBLISHABLE_KEY = 'pk_test_your_stripe_publishable_key'
-STRIPE_SECRET_KEY = 'sk_test_your_stripe_secret_key'
-STRIPE_WEBHOOK_SECRET = 'whsec_your_stripe_webhook_secret'
+# Stripe settings
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 
 # Khalti settings
-KHALTI_PUBLIC_KEY = 'test_public_key_1234567890abcdef'  # Replace with your Khalti public key
-KHALTI_SECRET_KEY = 'test_secret_key_1234567890abcdef'  # Replace with your Khalti secret key
+KHALTI_PUBLIC_KEY = os.getenv('KHALTI_PUBLIC_KEY', '')
+KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY', '')
 KHALTI_VERIFY_URL = 'https://khalti.com/api/v2/payment/verify/'
 KHALTI_INITIATE_URL = 'https://khalti.com/api/v2/epayment/initiate/'
-KHALTI_RETURN_URL = 'http://localhost:8000/membership/khalti-return/{membership_id}/'
+KHALTI_RETURN_URL = os.getenv(
+    'KHALTI_RETURN_URL',
+    'http://localhost:8000/membership/khalti-return/{membership_id}/'
+)
